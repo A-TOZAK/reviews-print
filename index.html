@@ -5876,34 +5876,63 @@
                     <iframe src="${pdfPath}"></iframe>
                 </div>
                 <div class="comment-form">
-                    <textarea id="comment-text" placeholder="このPDFへのコメントを入力...">${comment.text}</textarea>
+                    <textarea id="comment-text" placeholder="このPDFへのフィードバックを入力...">${comment.text}</textarea>
                     <div class="comment-form-actions">
-                        <button class="btn btn-submit" onclick="saveComment()">📤 コメント送信</button>
-                        <button class="btn btn-primary" onclick="markReviewed()">✅ OK</button>
-                        <button class="btn btn-danger" onclick="clearComment()">🗑️</button>
+                        <button class="btn btn-submit" onclick="sendPDFFeedback()">📤 フィードバック送信</button>
+                        <button class="btn btn-primary" onclick="markReviewed()">✅ チェック済みにする</button>
                     </div>
                 </div>
             `;
     }
 
-    function saveComment() {
+    function sendPDFFeedback() {
       if (!currentPDF) return;
 
-      const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
       const text = document.getElementById('comment-text').value;
+      if (!text.trim()) {
+        showToast('❌ コメントを入力してください');
+        return;
+      }
 
-      comments[key] = {
-        text: text,
-        status: text ? 'commented' : 'pending',
-        timestamp: new Date().toISOString()
+      const button = document.querySelector('.comment-form-actions .btn-submit');
+      const originalText = button.textContent;
+      button.textContent = '送信中...';
+      button.disabled = true;
+
+      const data = {
+        grade: currentPDF.gradeId,
+        unit: currentPDF.unitId,
+        pdf: currentPDF.pdfName,
+        comment: text
       };
 
-      localStorage.setItem('pdfComments', JSON.stringify(comments));
-      showToast('📤 コメントを送信しました！');
-      updateStats();
-      renderSidebar();
-
-      document.querySelector('.pdf-card.active')?.classList.toggle('has-comment', text.length > 0);
+      fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+        body: JSON.stringify(data)
+      }).then(() => {
+        showToast('✅ フィードバックを送信しました！');
+        // Save locally as "commented" just for UI status
+        const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
+        comments[key] = {
+          text: text,
+          status: 'commented',
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('pdfComments', JSON.stringify(comments));
+        updateStats();
+        renderSidebar();
+        document.querySelector('.pdf-card.active')?.classList.add('has-comment');
+      }).catch(err => {
+        alert('送信に失敗しました。時間をおいて再度お試しください。');
+        console.error(err);
+      }).finally(() => {
+        button.textContent = originalText;
+        button.disabled = false;
+      });
     }
 
     function markReviewed() {
