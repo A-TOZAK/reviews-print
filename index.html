@@ -2,566 +2,588 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📚 算数プリント レビューツール</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --bg-dark: #1a1a2e;
-            --bg-card: #16213e;
-            --bg-hover: #0f3460;
-            --text: #e8e8e8;
-            --text-muted: #a0a0a0;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --border: #2d3748;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .header h1 {
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 0.8rem;
-        }
-
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .btn-primary {
-            background: white;
-            color: var(--primary);
-        }
-
-        .btn-primary:hover {
-            background: #f0f0f0;
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-success:hover {
-            filter: brightness(1.1);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-large {
-            padding: 0.8rem 1.5rem;
-            font-size: 1rem;
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            font-size: 1rem;
-            padding: 0.8rem 1.5rem;
-            animation: pulse 2s infinite;
-        }
-
-        .btn-submit:hover {
-            animation: none;
-            transform: scale(1.05);
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-            }
-
-            50% {
-                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-            }
-        }
-
-        /* Global Feedback Panel */
-        .global-feedback {
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
-        }
-
-        .global-feedback-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.8rem;
-        }
-
-        .global-feedback-header h2 {
-            font-size: 1rem;
-            color: var(--warning);
-        }
-
-        .global-feedback-header .save-status {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .global-feedback-header .save-status.saved {
-            color: var(--success);
-        }
-
-        .global-textarea {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg-dark);
-            color: var(--text);
-            font-size: 1rem;
-            line-height: 1.6;
-            resize: vertical;
-            min-height: 100px;
-            font-family: inherit;
-        }
-
-        .global-textarea:focus {
-            outline: none;
-            border-color: var(--warning);
-        }
-
-        .global-feedback-actions {
-            display: flex;
-            gap: 0.8rem;
-            margin-top: 0.8rem;
-            align-items: center;
-        }
-
-        .container {
-            display: flex;
-            height: calc(100vh - 220px);
-        }
-
-        .sidebar {
-            width: 280px;
-            background: var(--bg-card);
-            border-right: 1px solid var(--border);
-            overflow-y: auto;
-            flex-shrink: 0;
-        }
-
-        .grade-section {
-            border-bottom: 1px solid var(--border);
-        }
-
-        .grade-header {
-            padding: 0.8rem 1rem;
-            background: var(--bg-hover);
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: background 0.2s;
-        }
-
-        .grade-header:hover {
-            background: var(--primary);
-        }
-
-        .grade-header .badge {
-            background: var(--primary);
-            color: white;
-            padding: 0.15rem 0.5rem;
-            border-radius: 10px;
-            font-size: 0.7rem;
-        }
-
-        .unit-list {
-            display: none;
-        }
-
-        .unit-list.show {
-            display: block;
-        }
-
-        .unit-item {
-            padding: 0.6rem 1rem 0.6rem 1.5rem;
-            cursor: pointer;
-            border-left: 3px solid transparent;
-            transition: all 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-        }
-
-        .unit-item:hover {
-            background: var(--bg-hover);
-            border-left-color: var(--primary);
-        }
-
-        .unit-item.active {
-            background: var(--bg-hover);
-            border-left-color: var(--primary);
-        }
-
-        .unit-item .comment-count {
-            background: var(--warning);
-            color: #000;
-            padding: 0.1rem 0.4rem;
-            border-radius: 8px;
-            font-size: 0.65rem;
-            font-weight: 600;
-        }
-
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .pdf-viewer-container {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-        }
-
-        .pdf-list {
-            width: 45%;
-            overflow-y: auto;
-            padding: 1rem;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 0.8rem;
-            align-content: start;
-        }
-
-        .pdf-card {
-            background: var(--bg-card);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .pdf-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .pdf-card.active {
-            border-color: var(--success);
-        }
-
-        .pdf-card.has-comment {
-            border-color: var(--warning);
-        }
-
-        .pdf-card-header {
-            padding: 0.6rem 0.8rem;
-            background: var(--bg-hover);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .pdf-card-title {
-            font-weight: 600;
-            font-size: 0.8rem;
-        }
-
-        .pdf-card-badge {
-            font-size: 0.65rem;
-            padding: 0.15rem 0.4rem;
-            border-radius: 5px;
-            background: var(--primary);
-        }
-
-        .pdf-preview {
-            height: 150px;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pdf-preview iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .comment-panel {
-            width: 55%;
-            background: var(--bg-card);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .comment-header {
-            padding: 0.8rem 1rem;
-            background: var(--bg-hover);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .comment-header h3 {
-            font-size: 0.95rem;
-            margin-bottom: 0.2rem;
-        }
-
-        .comment-header p {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .pdf-large-preview {
-            flex: 1;
-            background: #2a2a2a;
-            overflow: hidden;
-        }
-
-        .pdf-large-preview iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .comment-form {
-            padding: 1rem;
-            background: var(--bg-hover);
-            border-top: 1px solid var(--border);
-        }
-
-        .comment-form textarea {
-            width: 100%;
-            padding: 0.8rem;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg-dark);
-            color: var(--text);
-            font-size: 1rem;
-            resize: vertical;
-            min-height: 80px;
-            font-family: inherit;
-            line-height: 1.5;
-        }
-
-        .comment-form textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .comment-form-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.6rem;
-        }
-
-        .stats-bar {
-            padding: 0.6rem 2rem;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.8rem;
-        }
-
-        .status-indicator {
-            display: flex;
-            gap: 1rem;
-            color: var(--text-muted);
-        }
-
-        .status-indicator span {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .dot.reviewed {
-            background: var(--success);
-        }
-
-        .dot.commented {
-            background: var(--warning);
-        }
-
-        .dot.pending {
-            background: var(--text-muted);
-        }
-
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-muted);
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .empty-state .icon {
-            font-size: 3rem;
-            margin-bottom: 0.8rem;
-        }
-
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--success);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 1000;
-            font-size: 0.95rem;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        /* Storage info */
-        .storage-info {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-
-        .storage-info .dot-online {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--success);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📚 算数プリント レビューツール</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg-dark: #1a1a2e;
+      --bg-card: #16213e;
+      --bg-hover: #0f3460;
+      --text: #e8e8e8;
+      --text-muted: #a0a0a0;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --border: #2d3748;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .header h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.8rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: #f0f0f0;
+      transform: translateY(-2px);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-large {
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      font-size: 1rem;
+      padding: 0.8rem 1.5rem;
+      animation: pulse 2s infinite;
+    }
+
+    .btn-submit:hover {
+      animation: none;
+      transform: scale(1.05);
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+      }
+    }
+
+    /* Global Feedback Panel */
+    .global-feedback {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+    }
+
+    .global-feedback-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+    }
+
+    .global-feedback-header h2 {
+      font-size: 1rem;
+      color: var(--warning);
+    }
+
+    .global-feedback-header .save-status {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .global-feedback-header .save-status.saved {
+      color: var(--success);
+    }
+
+    .global-textarea {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1.6;
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+    }
+
+    .global-textarea:focus {
+      outline: none;
+      border-color: var(--warning);
+    }
+
+    .global-feedback-actions {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 0.8rem;
+      align-items: center;
+    }
+
+    .container {
+      display: flex;
+      height: calc(100vh - 220px);
+    }
+
+    .sidebar {
+      width: 280px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .grade-section {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .grade-header {
+      padding: 0.8rem 1rem;
+      background: var(--bg-hover);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .grade-header:hover {
+      background: var(--primary);
+    }
+
+    .grade-header .badge {
+      background: var(--primary);
+      color: white;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      font-size: 0.7rem;
+    }
+
+    .unit-list {
+      display: none;
+    }
+
+    .unit-list.show {
+      display: block;
+    }
+
+    .unit-item {
+      padding: 0.6rem 1rem 0.6rem 1.5rem;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .unit-item:hover {
+      background: var(--bg-hover);
+      border-left-color: var(--primary);
+    }
+
+    .unit-item.active {
+      background: var(--bg-hover);
+      border-left-color: var(--primary);
+    }
+
+    .unit-item .comment-count {
+      background: var(--warning);
+      color: #000;
+      padding: 0.1rem 0.4rem;
+      border-radius: 8px;
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .pdf-viewer-container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .pdf-list {
+      width: 45%;
+      overflow-y: auto;
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.8rem;
+      align-content: start;
+    }
+
+    .pdf-card {
+      background: var(--bg-card);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .pdf-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .pdf-card.active {
+      border-color: var(--success);
+    }
+
+    .pdf-card.has-comment {
+      border-color: var(--warning);
+    }
+
+    .pdf-card-header {
+      padding: 0.6rem 0.8rem;
+      background: var(--bg-hover);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pdf-card-title {
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .pdf-card-badge {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 5px;
+      color: white;
+    }
+
+    .badge-problem {
+      background: var(--primary);
+    }
+
+    .badge-answer {
+      background: var(--danger);
+    }
+
+    .pdf-preview {
+      height: 150px;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pdf-preview iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .comment-panel {
+      width: 55%;
+      background: var(--bg-card);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .comment-header {
+      padding: 0.8rem 1rem;
+      background: var(--bg-hover);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comment-header h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .comment-header p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .pdf-large-preview {
+      flex: 1;
+      background: #2a2a2a;
+      overflow: hidden;
+    }
+
+    .pdf-large-preview iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .comment-form {
+      padding: 1rem;
+      background: var(--bg-hover);
+      border-top: 1px solid var(--border);
+    }
+
+    .comment-form textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-size: 1rem;
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+
+    .comment-form textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .comment-form-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
+
+    .stats-bar {
+      padding: 0.6rem 2rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .status-indicator {
+      display: flex;
+      gap: 1rem;
+      color: var(--text-muted);
+    }
+
+    .status-indicator span {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot.reviewed {
+      background: var(--success);
+    }
+
+    .dot.commented {
+      background: var(--warning);
+    }
+
+    .dot.pending {
+      background: var(--text-muted);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .empty-state .icon {
+      font-size: 3rem;
+      margin-bottom: 0.8rem;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--success);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+      font-size: 0.95rem;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Storage info */
+    .storage-info {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .storage-info .dot-online {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+  </style>
 </head>
 
 <body>
-    <header class="header">
-        <h1>📚 算数プリント レビューツール</h1>
-        <div class="header-actions">
-            
-            <a href="concept.html" target="_blank" class="btn btn-primary" style="text-decoration: none;">
-                💡 使い方・考え方
-            </a>
-            <div class="storage-info">
-                <span class="dot-online"></span>
-                <span>ブラウザに自動保存中</span>
-            </div>
-            
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSf-_PLACEHOLDER_-/viewform" target="_blank" class="btn btn-submit" style="text-decoration: none;">
-                📤 フィードバック送信
-            </a>
-        </div>
-    </header>
-
-    
-
-    <div class="stats-bar">
-        <div class="status-indicator">
-            <span><span class="dot reviewed"></span> レビュー済: <strong id="reviewed-count">0</strong></span>
-            <span><span class="dot commented"></span> コメント: <strong id="commented-count">0</strong></span>
-            <span><span class="dot pending"></span> 未確認: <strong id="pending-count">0</strong></span>
-        </div>
-        <div>
-            <strong id="total-count">0</strong> PDF
-        </div>
+  <header class="header">
+    <h1>📚 算数プリント レビューツール</h1>
+    <div class="header-actions">
+      <a href="concept.html" target="_blank" class="btn btn-primary" style="text-decoration: none;">
+        💡 使い方・考え方
+      </a>
+      <div class="storage-info">
+        <span class="dot-online"></span>
+        <span>ブラウザに自動保存中</span>
+      </div>
+      <button class="btn btn-submit" onclick="toggleGlobalFeedback()">
+        📤 フィードバック送信
+      </button>
     </div>
+  </header>
 
-    <div class="container">
-        <aside class="sidebar" id="sidebar">
-            <!-- Grade sections will be generated here -->
-        </aside>
-
-        <main class="main-content">
-            <div class="pdf-viewer-container">
-                <div class="pdf-list" id="pdf-list">
-                    <div class="empty-state">
-                        <div class="icon">📂</div>
-                        <h3>単元を選択</h3>
-                        <p>左のサイドバーから学年・単元を選んでください</p>
-                    </div>
-                </div>
-
-                <div class="comment-panel" id="comment-panel">
-                    <div class="empty-state">
-                        <div class="icon">💬</div>
-                        <h3>PDFを選択</h3>
-                        <p>PDFカードをクリックで<br>プレビュー＆コメント</p>
-                    </div>
-                </div>
-            </div>
-        </main>
+  <!-- Global Feedback Panel -->
+  <div class="global-feedback" id="global-feedback" style="display: none;">
+    <div class="global-feedback-header">
+      <h2>📨 フィードバック送信</h2>
+      <span class="save-status" id="global-save-status">未保存</span>
     </div>
+    <textarea class="global-textarea" id="global-notes"
+      placeholder="気になった点、修正依頼、感想などをご自由にお書きください...&#10;&#10;例：&#10;・全体的に文字が小さい&#10;・〇〇単元の答えが間違っている&#10;・もっと計算スペースが欲しい"></textarea>
+    <div class="global-feedback-actions">
+      <button class="btn btn-submit btn-large" onclick="sendGlobalFeedback()">
+        📤 送信する
+      </button>
+      <span style="color: var(--text-muted); font-size: 0.8rem;">
+        ※ 入力内容は一時的に保存されます
+      </span>
+    </div>
+  </div>
 
-    <div class="toast" id="toast">保存しました</div>
+  <div class="stats-bar">
+    <div class="status-indicator">
+      <span><span class="dot reviewed"></span> レビュー済: <strong id="reviewed-count">0</strong></span>
+      <span><span class="dot commented"></span> コメント: <strong id="commented-count">0</strong></span>
+      <span><span class="dot pending"></span> 未確認: <strong id="pending-count">0</strong></span>
+    </div>
+    <div>
+      <strong id="total-count">0</strong> PDF
+    </div>
+  </div>
 
-    <!-- PDF data will be injected here by generate_review.py -->
-    <script>
-        // This will be replaced with actual PDF data
-        const pdfData = {
+  <div class="container">
+    <aside class="sidebar" id="sidebar">
+      <!-- Grade sections will be generated here -->
+    </aside>
+
+    <main class="main-content">
+      <div class="pdf-viewer-container">
+        <div class="pdf-list" id="pdf-list">
+          <div class="empty-state">
+            <div class="icon">📂</div>
+            <h3>単元を選択</h3>
+            <p>左のサイドバーから学年・単元を選んでください</p>
+          </div>
+        </div>
+
+        <div class="comment-panel" id="comment-panel">
+          <div class="empty-state">
+            <div class="icon">💬</div>
+            <h3>PDFを選択</h3>
+            <p>PDFカードをクリックで<br>プレビュー＆コメント</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast">保存しました</div>
+
+  <!-- PDF data will be injected here by generate_review.py -->
+  <script>
+    // This will be replaced with actual PDF data
+    const pdfData = {
   "2年生_拡張版": [
     {
       "id": "01_ひょうとグラフ",
@@ -5610,119 +5632,165 @@
     }
   ]
 };
-    </script>
+  </script>
 
-    <script>
-        // Data structure
-        const gradeData = {};
-        let comments = JSON.parse(localStorage.getItem('pdfComments') || '{}');
-        let globalNotes = localStorage.getItem('globalFeedbackNotes') || '';
-        let currentPDF = null;
+  <script>
+    // Data structure
+    const gradeData = {};
+    let comments = JSON.parse(localStorage.getItem('pdfComments') || '{}');
+    let globalNotes = localStorage.getItem('globalFeedbackNotes') || '';
+    let currentPDF = null;
 
-        // Grade configurations
-        const grades = [
-            { id: '2年生_拡張版', name: '2年生', emoji: '🌸' },
-            { id: '3年生_拡張版', name: '3年生', emoji: '🌻' },
-            { id: '4年生_拡張版', name: '4年生', emoji: '🍀' },
-            { id: '5年生_拡張版', name: '5年生', emoji: '🌟' },
-            { id: '6年生_拡張版', name: '6年生', emoji: '🎓' }
-        ];
+    // Grade configurations
+    const grades = [
+      { id: '2年生_拡張版', name: '2年生', emoji: '🌸' },
+      { id: '3年生_拡張版', name: '3年生', emoji: '🌻' },
+      { id: '4年生_拡張版', name: '4年生', emoji: '🍀' },
+      { id: '5年生_拡張版', name: '5年生', emoji: '🌟' },
+      { id: '6年生_拡張版', name: '6年生', emoji: '🎓' }
+    ];
 
-        // Initialize
-        function init() {
-            scanPDFs();
-            renderSidebar();
-            updateStats();
-            loadGlobalNotes();
+    // Initialize
+    function init() {
+      scanPDFs();
+      renderSidebar();
+      updateStats();
+      loadGlobalNotes();
 
-            // Auto-save global notes on input
-            document.getElementById('global-notes').addEventListener('input', debounce(autoSaveGlobalNotes, 1000));
-        }
+      // Auto-save global notes on input
+      document.getElementById('global-notes').addEventListener('input', debounce(autoSaveGlobalNotes, 1000));
+    }
 
-        function scanPDFs() {
-            grades.forEach(grade => {
-                gradeData[grade.id] = {
-                    name: grade.name,
-                    emoji: grade.emoji,
-                    units: []
-                };
-            });
+    function scanPDFs() {
+      grades.forEach(grade => {
+        gradeData[grade.id] = {
+          name: grade.name,
+          emoji: grade.emoji,
+          units: []
+        };
+      });
 
-            if (typeof pdfData !== 'undefined' && Object.keys(pdfData).length > 0) {
-                Object.keys(pdfData).forEach(gradeId => {
-                    if (gradeData[gradeId]) {
-                        gradeData[gradeId].units = pdfData[gradeId];
-                    }
-                });
-            }
-        }
+      if (typeof pdfData !== 'undefined' && Object.keys(pdfData).length > 0) {
+        Object.keys(pdfData).forEach(gradeId => {
+          if (gradeData[gradeId]) {
+            gradeData[gradeId].units = pdfData[gradeId];
+          }
+        });
+      }
+    }
 
-        // Toggle global feedback panel
-        function toggleGlobalFeedback() {
-            const panel = document.getElementById('global-feedback');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }
+    // Toggle global feedback panel
+    function toggleGlobalFeedback() {
+      const panel = document.getElementById('global-feedback');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
 
-        // Load global notes
-        function loadGlobalNotes() {
-            document.getElementById('global-notes').value = globalNotes;
-            updateGlobalSaveStatus(globalNotes ? 'saved' : '');
-        }
+    // Load global notes
+    function loadGlobalNotes() {
+      document.getElementById('global-notes').value = globalNotes;
+      updateGlobalSaveStatus(globalNotes ? 'saved' : '');
+    }
 
-        // Auto-save global notes
-        function autoSaveGlobalNotes() {
-            const text = document.getElementById('global-notes').value;
-            globalNotes = text;
-            localStorage.setItem('globalFeedbackNotes', text);
-            updateGlobalSaveStatus('saved');
-        }
+    // Auto-save global notes
+    function autoSaveGlobalNotes() {
+      const text = document.getElementById('global-notes').value;
+      globalNotes = text;
+      localStorage.setItem('globalFeedbackNotes', text);
+      updateGlobalSaveStatus('saved');
+    }
 
-        // Save global notes button
-        function saveGlobalNotes() {
-            autoSaveGlobalNotes();
-            showToast('✅ 全体メモを保存しました！');
-        }
+    // GAS URL
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxKn9YoW6Ff06nANFIbPXuHN_mpEAL3uZThlmaBKIq5jijPzkbpum5V4mkB1BaEPett/exec";
 
-        // Update save status display
-        function updateGlobalSaveStatus(status) {
-            const el = document.getElementById('global-save-status');
-            if (status === 'saved') {
-                el.textContent = '✓ 保存済み';
-                el.className = 'save-status saved';
-            } else {
-                el.textContent = '未保存';
-                el.className = 'save-status';
-            }
-        }
+    // Send Global Feedback to GAS
+    function sendGlobalFeedback() {
+      const text = document.getElementById('global-notes').value;
+      if (!text.trim()) {
+        alert('コメントを入力してください');
+        return;
+      }
 
-        // Debounce helper
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
+      const button = document.querySelector('.btn-submit.btn-large');
+      const originalText = button.textContent;
+      button.textContent = '送信中...';
+      button.disabled = true;
 
-        // Render sidebar
-        function renderSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.innerHTML = '';
+      const data = {
+        grade: "全体/その他",
+        unit: "全体フィードバック",
+        pdf: "Global",
+        comment: text
+      };
 
-            grades.forEach(grade => {
-                const data = gradeData[grade.id];
-                if (!data || data.units.length === 0) return;
+      // Use no-cors mode for GAS Web App
+      fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+        body: JSON.stringify(data)
+      }).then(() => {
+        showToast('✅ フィードバックを送信しました！');
+        document.getElementById('global-notes').value = '';
+        localStorage.setItem('globalFeedbackNotes', '');
+        updateGlobalSaveStatus('');
+        toggleGlobalFeedback(); // Close panel
+      }).catch(err => {
+        alert('送信に失敗しました。時間をおいて再度お試しください。');
+        console.error(err);
+      }).finally(() => {
+        button.textContent = originalText;
+        button.disabled = false;
+      });
+    }
 
-                const section = document.createElement('div');
-                section.className = 'grade-section';
+    // Save global notes button (Deprecated but kept for auto-save logic)
+    function saveGlobalNotes() {
+      autoSaveGlobalNotes();
+      showToast('✅ 下書きを保存しました');
+    }
 
-                const commentCount = getGradeCommentCount(grade.id);
+    // Update save status display
+    function updateGlobalSaveStatus(status) {
+      const el = document.getElementById('global-save-status');
+      if (status === 'saved') {
+        el.textContent = '✓ 保存済み';
+        el.className = 'save-status saved';
+      } else {
+        el.textContent = '未保存';
+        el.className = 'save-status';
+      }
+    }
 
-                section.innerHTML = `
+    // Debounce helper
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // Render sidebar
+    function renderSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.innerHTML = '';
+
+      grades.forEach(grade => {
+        const data = gradeData[grade.id];
+        if (!data || data.units.length === 0) return;
+
+        const section = document.createElement('div');
+        section.className = 'grade-section';
+
+        const commentCount = getGradeCommentCount(grade.id);
+
+        section.innerHTML = `
                     <div class="grade-header" onclick="toggleGrade('${grade.id}')">
                         <span>${data.emoji} ${data.name}</span>
                         ${commentCount > 0 ? `<span class="badge">${commentCount} コメント</span>` : `<span class="badge">${data.units.length} 単元</span>`}
@@ -5732,74 +5800,74 @@
                             <div class="unit-item" onclick="selectUnit('${grade.id}', '${unit.id}')">
                                 <span>${unit.name}</span>
                                 ${getUnitCommentCount(grade.id, unit.id) > 0 ?
-                        `<span class="comment-count">${getUnitCommentCount(grade.id, unit.id)}</span>` : ''}
+            `<span class="comment-count">${getUnitCommentCount(grade.id, unit.id)}</span>` : ''}
                             </div>
                         `).join('')}
                     </div>
                 `;
 
-                sidebar.appendChild(section);
-            });
-        }
+        sidebar.appendChild(section);
+      });
+    }
 
-        function toggleGrade(gradeId) {
-            const unitList = document.getElementById(`units-${gradeId}`);
-            unitList.classList.toggle('show');
-        }
+    function toggleGrade(gradeId) {
+      const unitList = document.getElementById(`units-${gradeId}`);
+      unitList.classList.toggle('show');
+    }
 
-        function selectUnit(gradeId, unitId) {
-            const data = gradeData[gradeId];
-            const unit = data.units.find(u => u.id === unitId);
-            if (!unit) return;
+    function selectUnit(gradeId, unitId) {
+      const data = gradeData[gradeId];
+      const unit = data.units.find(u => u.id === unitId);
+      if (!unit) return;
 
-            document.querySelectorAll('.unit-item').forEach(el => el.classList.remove('active'));
-            event.target.closest('.unit-item').classList.add('active');
+      document.querySelectorAll('.unit-item').forEach(el => el.classList.remove('active'));
+      event.target.closest('.unit-item').classList.add('active');
 
-            renderPDFList(gradeId, unit);
-        }
+      renderPDFList(gradeId, unit);
+    }
 
-        function renderPDFList(gradeId, unit) {
-            const container = document.getElementById('pdf-list');
+    function renderPDFList(gradeId, unit) {
+      const container = document.getElementById('pdf-list');
 
-            if (!unit.pdfs || unit.pdfs.length === 0) {
-                container.innerHTML = `
+      if (!unit.pdfs || unit.pdfs.length === 0) {
+        container.innerHTML = `
                     <div class="empty-state">
                         <div class="icon">📭</div>
                         <h3>PDFがありません</h3>
                     </div>
                 `;
-                return;
-            }
+        return;
+      }
 
-            container.innerHTML = unit.pdfs.map(pdf => {
-                const key = `${gradeId}/${unit.id}/${pdf.name}`;
-                const hasComment = comments[key] && comments[key].text;
+      container.innerHTML = unit.pdfs.map(pdf => {
+        const key = `${gradeId}/${unit.id}/${pdf.name}`;
+        const hasComment = comments[key] && comments[key].text;
 
-                return `
+        return `
                     <div class="pdf-card ${hasComment ? 'has-comment' : ''}" 
                          onclick="selectPDF('${gradeId}', '${unit.id}', '${pdf.name}', '${pdf.path}')">
                         <div class="pdf-card-header">
                             <span class="pdf-card-title">${pdf.name}</span>
-                            <span class="pdf-card-badge">${pdf.type}</span>
+                            <span class="pdf-card-badge ${pdf.type.includes('解答') ? 'badge-answer' : 'badge-problem'}">${pdf.type}</span>
                         </div>
                         <div class="pdf-preview">
                             <iframe src="${pdf.path}#toolbar=0&navpanes=0" loading="lazy"></iframe>
                         </div>
                     </div>
                 `;
-            }).join('');
-        }
+      }).join('');
+    }
 
-        function selectPDF(gradeId, unitId, pdfName, pdfPath) {
-            currentPDF = { gradeId, unitId, pdfName, pdfPath };
-            const key = `${gradeId}/${unitId}/${pdfName}`;
-            const comment = comments[key] || { text: '', status: 'pending' };
+    function selectPDF(gradeId, unitId, pdfName, pdfPath) {
+      currentPDF = { gradeId, unitId, pdfName, pdfPath };
+      const key = `${gradeId}/${unitId}/${pdfName}`;
+      const comment = comments[key] || { text: '', status: 'pending' };
 
-            document.querySelectorAll('.pdf-card').forEach(el => el.classList.remove('active'));
-            event.target.closest('.pdf-card').classList.add('active');
+      document.querySelectorAll('.pdf-card').forEach(el => el.classList.remove('active'));
+      event.target.closest('.pdf-card').classList.add('active');
 
-            const panel = document.getElementById('comment-panel');
-            panel.innerHTML = `
+      const panel = document.getElementById('comment-panel');
+      panel.innerHTML = `
                 <div class="comment-header">
                     <h3>📄 ${pdfName}</h3>
                     <p>${gradeId} / ${unitId}</p>
@@ -5816,168 +5884,168 @@
                     </div>
                 </div>
             `;
-        }
+    }
 
-        function saveComment() {
-            if (!currentPDF) return;
+    function saveComment() {
+      if (!currentPDF) return;
 
-            const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
-            const text = document.getElementById('comment-text').value;
+      const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
+      const text = document.getElementById('comment-text').value;
 
-            comments[key] = {
-                text: text,
-                status: text ? 'commented' : 'pending',
-                timestamp: new Date().toISOString()
-            };
+      comments[key] = {
+        text: text,
+        status: text ? 'commented' : 'pending',
+        timestamp: new Date().toISOString()
+      };
 
-            localStorage.setItem('pdfComments', JSON.stringify(comments));
-            showToast('📤 コメントを送信しました！');
-            updateStats();
-            renderSidebar();
+      localStorage.setItem('pdfComments', JSON.stringify(comments));
+      showToast('📤 コメントを送信しました！');
+      updateStats();
+      renderSidebar();
 
-            document.querySelector('.pdf-card.active')?.classList.toggle('has-comment', text.length > 0);
-        }
+      document.querySelector('.pdf-card.active')?.classList.toggle('has-comment', text.length > 0);
+    }
 
-        function markReviewed() {
-            if (!currentPDF) return;
+    function markReviewed() {
+      if (!currentPDF) return;
 
-            const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
-            comments[key] = {
-                ...comments[key],
-                status: 'reviewed',
-                timestamp: new Date().toISOString()
-            };
+      const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
+      comments[key] = {
+        ...comments[key],
+        status: 'reviewed',
+        timestamp: new Date().toISOString()
+      };
 
-            localStorage.setItem('pdfComments', JSON.stringify(comments));
-            showToast('✅ レビュー完了！');
-            updateStats();
-        }
+      localStorage.setItem('pdfComments', JSON.stringify(comments));
+      showToast('✅ レビュー完了！');
+      updateStats();
+    }
 
-        function clearComment() {
-            if (!currentPDF) return;
+    function clearComment() {
+      if (!currentPDF) return;
 
-            const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
-            delete comments[key];
+      const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
+      delete comments[key];
 
-            document.getElementById('comment-text').value = '';
-            localStorage.setItem('pdfComments', JSON.stringify(comments));
-            showToast('🗑️ クリアしました');
-            updateStats();
-            renderSidebar();
+      document.getElementById('comment-text').value = '';
+      localStorage.setItem('pdfComments', JSON.stringify(comments));
+      showToast('🗑️ クリアしました');
+      updateStats();
+      renderSidebar();
 
-            document.querySelector('.pdf-card.active')?.classList.remove('has-comment');
-        }
+      document.querySelector('.pdf-card.active')?.classList.remove('has-comment');
+    }
 
-        // Export feedback
-        function exportFeedback() {
-            let md = `# 算数プリント フィードバック\n\n`;
-            md += `📅 生成日時: ${new Date().toLocaleString('ja-JP')}\n\n`;
-            md += `---\n\n`;
+    // Export feedback
+    function exportFeedback() {
+      let md = `# 算数プリント フィードバック\n\n`;
+      md += `📅 生成日時: ${new Date().toLocaleString('ja-JP')}\n\n`;
+      md += `---\n\n`;
 
-            // Global notes first
-            if (globalNotes.trim()) {
-                md += `## 📋 全体フィードバック\n\n`;
-                md += `${globalNotes}\n\n`;
-                md += `---\n\n`;
+      // Global notes first
+      if (globalNotes.trim()) {
+        md += `## 📋 全体フィードバック\n\n`;
+        md += `${globalNotes}\n\n`;
+        md += `---\n\n`;
+      }
+
+      // Per-PDF comments
+      let hasAnyComments = false;
+
+      grades.forEach(grade => {
+        const data = gradeData[grade.id];
+        if (!data) return;
+
+        let gradeComments = [];
+
+        data.units.forEach(unit => {
+          unit.pdfs?.forEach(pdf => {
+            const key = `${grade.id}/${unit.id}/${pdf.name}`;
+            const comment = comments[key];
+            if (comment && comment.text) {
+              gradeComments.push({
+                unit: unit.name,
+                pdf: pdf.name,
+                text: comment.text
+              });
             }
+          });
+        });
 
-            // Per-PDF comments
-            let hasAnyComments = false;
+        if (gradeComments.length > 0) {
+          hasAnyComments = true;
+          md += `## ${data.emoji} ${data.name}\n\n`;
 
-            grades.forEach(grade => {
-                const data = gradeData[grade.id];
-                if (!data) return;
-
-                let gradeComments = [];
-
-                data.units.forEach(unit => {
-                    unit.pdfs?.forEach(pdf => {
-                        const key = `${grade.id}/${unit.id}/${pdf.name}`;
-                        const comment = comments[key];
-                        if (comment && comment.text) {
-                            gradeComments.push({
-                                unit: unit.name,
-                                pdf: pdf.name,
-                                text: comment.text
-                            });
-                        }
-                    });
-                });
-
-                if (gradeComments.length > 0) {
-                    hasAnyComments = true;
-                    md += `## ${data.emoji} ${data.name}\n\n`;
-
-                    gradeComments.forEach(c => {
-                        md += `### ${c.unit} / ${c.pdf}\n\n`;
-                        md += `${c.text}\n\n`;
-                    });
-                }
-            });
-
-            if (!hasAnyComments && !globalNotes.trim()) {
-                md += `コメントはありません。\n`;
-            }
-
-            // Download with timestamp filename
-            const now = new Date();
-            const timestamp = now.getFullYear().toString() +
-                String(now.getMonth() + 1).padStart(2, '0') +
-                String(now.getDate()).padStart(2, '0') + '_' +
-                String(now.getHours()).padStart(2, '0') +
-                String(now.getMinutes()).padStart(2, '0') +
-                String(now.getSeconds()).padStart(2, '0');
-
-            const blob = new Blob([md], { type: 'text/markdown' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `feedback_${timestamp}.md`;
-            a.click();
-            URL.revokeObjectURL(url);
-
-            showToast('📤 フィードバックをダウンロードしました！\\nフィードバック/ フォルダに移動してください');
+          gradeComments.forEach(c => {
+            md += `### ${c.unit} / ${c.pdf}\n\n`;
+            md += `${c.text}\n\n`;
+          });
         }
+      });
 
-        // Helper functions
-        function getGradeCommentCount(gradeId) {
-            return Object.keys(comments).filter(k => k.startsWith(gradeId) && comments[k].text).length;
+      if (!hasAnyComments && !globalNotes.trim()) {
+        md += `コメントはありません。\n`;
+      }
+
+      // Download with timestamp filename
+      const now = new Date();
+      const timestamp = now.getFullYear().toString() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0') + '_' +
+        String(now.getHours()).padStart(2, '0') +
+        String(now.getMinutes()).padStart(2, '0') +
+        String(now.getSeconds()).padStart(2, '0');
+
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `feedback_${timestamp}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showToast('📤 フィードバックをダウンロードしました！\\nフィードバック/ フォルダに移動してください');
+    }
+
+    // Helper functions
+    function getGradeCommentCount(gradeId) {
+      return Object.keys(comments).filter(k => k.startsWith(gradeId) && comments[k].text).length;
+    }
+
+    function getUnitCommentCount(gradeId, unitId) {
+      return Object.keys(comments).filter(k => k.startsWith(`${gradeId}/${unitId}`) && comments[k].text).length;
+    }
+
+    function updateStats() {
+      const reviewed = Object.values(comments).filter(c => c.status === 'reviewed').length;
+      const commented = Object.values(comments).filter(c => c.text && c.status !== 'reviewed').length;
+
+      document.getElementById('reviewed-count').textContent = reviewed;
+      document.getElementById('commented-count').textContent = commented;
+      document.getElementById('pending-count').textContent = 0;
+
+      let totalPDFs = 0;
+      grades.forEach(grade => {
+        const data = gradeData[grade.id];
+        if (data) {
+          data.units.forEach(unit => {
+            totalPDFs += unit.pdfs?.length || 0;
+          });
         }
+      });
+      document.getElementById('total-count').textContent = totalPDFs;
+    }
 
-        function getUnitCommentCount(gradeId, unitId) {
-            return Object.keys(comments).filter(k => k.startsWith(`${gradeId}/${unitId}`) && comments[k].text).length;
-        }
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
 
-        function updateStats() {
-            const reviewed = Object.values(comments).filter(c => c.status === 'reviewed').length;
-            const commented = Object.values(comments).filter(c => c.text && c.status !== 'reviewed').length;
-
-            document.getElementById('reviewed-count').textContent = reviewed;
-            document.getElementById('commented-count').textContent = commented;
-            document.getElementById('pending-count').textContent = 0;
-
-            let totalPDFs = 0;
-            grades.forEach(grade => {
-                const data = gradeData[grade.id];
-                if (data) {
-                    data.units.forEach(unit => {
-                        totalPDFs += unit.pdfs?.length || 0;
-                    });
-                }
-            });
-            document.getElementById('total-count').textContent = totalPDFs;
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
-        }
-
-        // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
 </body>
 
 </html>
