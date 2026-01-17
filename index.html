@@ -1,0 +1,5983 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 算数プリント レビューツール</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-hover: #0f3460;
+            --text: #e8e8e8;
+            --text-muted: #a0a0a0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #2d3748;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-large {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-size: 1rem;
+            padding: 0.8rem 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        .btn-submit:hover {
+            animation: none;
+            transform: scale(1.05);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+        }
+
+        /* Global Feedback Panel */
+        .global-feedback {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+        }
+
+        .global-feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .global-feedback-header h2 {
+            font-size: 1rem;
+            color: var(--warning);
+        }
+
+        .global-feedback-header .save-status {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .global-feedback-header .save-status.saved {
+            color: var(--success);
+        }
+
+        .global-textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-dark);
+            color: var(--text);
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .global-textarea:focus {
+            outline: none;
+            border-color: var(--warning);
+        }
+
+        .global-feedback-actions {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 0.8rem;
+            align-items: center;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 220px);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .grade-section {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .grade-header {
+            padding: 0.8rem 1rem;
+            background: var(--bg-hover);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .grade-header:hover {
+            background: var(--primary);
+        }
+
+        .grade-header .badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+
+        .unit-list {
+            display: none;
+        }
+
+        .unit-list.show {
+            display: block;
+        }
+
+        .unit-item {
+            padding: 0.6rem 1rem 0.6rem 1.5rem;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .unit-item:hover {
+            background: var(--bg-hover);
+            border-left-color: var(--primary);
+        }
+
+        .unit-item.active {
+            background: var(--bg-hover);
+            border-left-color: var(--primary);
+        }
+
+        .unit-item .comment-count {
+            background: var(--warning);
+            color: #000;
+            padding: 0.1rem 0.4rem;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .pdf-viewer-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .pdf-list {
+            width: 45%;
+            overflow-y: auto;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 0.8rem;
+            align-content: start;
+        }
+
+        .pdf-card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .pdf-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .pdf-card.active {
+            border-color: var(--success);
+        }
+
+        .pdf-card.has-comment {
+            border-color: var(--warning);
+        }
+
+        .pdf-card-header {
+            padding: 0.6rem 0.8rem;
+            background: var(--bg-hover);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pdf-card-title {
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .pdf-card-badge {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 5px;
+            background: var(--primary);
+        }
+
+        .pdf-preview {
+            height: 150px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pdf-preview iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .comment-panel {
+            width: 55%;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comment-header {
+            padding: 0.8rem 1rem;
+            background: var(--bg-hover);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comment-header h3 {
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .comment-header p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .pdf-large-preview {
+            flex: 1;
+            background: #2a2a2a;
+            overflow: hidden;
+        }
+
+        .pdf-large-preview iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .comment-form {
+            padding: 1rem;
+            background: var(--bg-hover);
+            border-top: 1px solid var(--border);
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-dark);
+            color: var(--text);
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .comment-form-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+        }
+
+        .stats-bar {
+            padding: 0.6rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            gap: 1rem;
+            color: var(--text-muted);
+        }
+
+        .status-indicator span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot.reviewed {
+            background: var(--success);
+        }
+
+        .dot.commented {
+            background: var(--warning);
+        }
+
+        .dot.pending {
+            background: var(--text-muted);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 0.8rem;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+            font-size: 0.95rem;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Storage info */
+        .storage-info {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .storage-info .dot-online {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>📚 算数プリント レビューツール</h1>
+        <div class="header-actions">
+            
+            <a href="concept.html" target="_blank" class="btn btn-primary" style="text-decoration: none;">
+                💡 使い方・考え方
+            </a>
+            <div class="storage-info">
+                <span class="dot-online"></span>
+                <span>ブラウザに自動保存中</span>
+            </div>
+            
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSf-_PLACEHOLDER_-/viewform" target="_blank" class="btn btn-submit" style="text-decoration: none;">
+                📤 フィードバック送信
+            </a>
+        </div>
+    </header>
+
+    
+
+    <div class="stats-bar">
+        <div class="status-indicator">
+            <span><span class="dot reviewed"></span> レビュー済: <strong id="reviewed-count">0</strong></span>
+            <span><span class="dot commented"></span> コメント: <strong id="commented-count">0</strong></span>
+            <span><span class="dot pending"></span> 未確認: <strong id="pending-count">0</strong></span>
+        </div>
+        <div>
+            <strong id="total-count">0</strong> PDF
+        </div>
+    </div>
+
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <!-- Grade sections will be generated here -->
+        </aside>
+
+        <main class="main-content">
+            <div class="pdf-viewer-container">
+                <div class="pdf-list" id="pdf-list">
+                    <div class="empty-state">
+                        <div class="icon">📂</div>
+                        <h3>単元を選択</h3>
+                        <p>左のサイドバーから学年・単元を選んでください</p>
+                    </div>
+                </div>
+
+                <div class="comment-panel" id="comment-panel">
+                    <div class="empty-state">
+                        <div class="icon">💬</div>
+                        <h3>PDFを選択</h3>
+                        <p>PDFカードをクリックで<br>プレビュー＆コメント</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast" id="toast">保存しました</div>
+
+    <!-- PDF data will be injected here by generate_review.py -->
+    <script>
+        // This will be replaced with actual PDF data
+        const pdfData = {
+  "2年生_拡張版": [
+    {
+      "id": "01_ひょうとグラフ",
+      "name": "01_ひょうとグラフ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/01_ひょうとグラフ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/01_ひょうとグラフ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/01_ひょうとグラフ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/01_ひょうとグラフ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/01_ひょうとグラフ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/01_ひょうとグラフ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/01_ひょうとグラフ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/01_ひょうとグラフ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/01_ひょうとグラフ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/01_ひょうとグラフ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "02_たし算とひき算",
+      "name": "02_たし算とひき算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/02_たし算とひき算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/02_たし算とひき算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/02_たし算とひき算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/02_たし算とひき算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/02_たし算とひき算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/02_たし算とひき算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/02_たし算とひき算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/02_たし算とひき算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/02_たし算とひき算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/02_たし算とひき算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "03_時こくと時間",
+      "name": "03_時こくと時間",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/03_時こくと時間/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/03_時こくと時間/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/03_時こくと時間/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/03_時こくと時間/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/03_時こくと時間/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/03_時こくと時間/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/03_時こくと時間/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/03_時こくと時間/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/03_時こくと時間/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/03_時こくと時間/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "04_長さ",
+      "name": "04_長さ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/04_長さ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/04_長さ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/04_長さ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/04_長さ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/04_長さ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/04_長さ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/04_長さ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/04_長さ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/04_長さ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/04_長さ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "05_たし算とひき算のひっ算",
+      "name": "05_たし算とひき算のひっ算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/05_たし算とひき算のひっ算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/05_たし算とひき算のひっ算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/05_たし算とひき算のひっ算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/05_たし算とひき算のひっ算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/05_たし算とひき算のひっ算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/05_たし算とひき算のひっ算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/05_たし算とひき算のひっ算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/05_たし算とひき算のひっ算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/05_たし算とひき算のひっ算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/05_たし算とひき算のひっ算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "06_100をこえる数",
+      "name": "06_100をこえる数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/06_100をこえる数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/06_100をこえる数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/06_100をこえる数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/06_100をこえる数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/06_100をこえる数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/06_100をこえる数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/06_100をこえる数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/06_100をこえる数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/06_100をこえる数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/06_100をこえる数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "07_かさ",
+      "name": "07_かさ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/07_かさ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/07_かさ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/07_かさ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/07_かさ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/07_かさ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/07_かさ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/07_かさ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/07_かさ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/07_かさ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/07_かさ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "08_見方考え方をふかめよう",
+      "name": "08_見方考え方をふかめよう",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/08_見方考え方をふかめよう/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/08_見方考え方をふかめよう/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/08_見方考え方をふかめよう/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/08_見方考え方をふかめよう/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/08_見方考え方をふかめよう/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/08_見方考え方をふかめよう/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/08_見方考え方をふかめよう/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/08_見方考え方をふかめよう/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/08_見方考え方をふかめよう/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/08_見方考え方をふかめよう/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "09_たしかめよう1学期",
+      "name": "09_たしかめよう1学期",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/09_たしかめよう1学期/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/09_たしかめよう1学期/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/09_たしかめよう1学期/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/09_たしかめよう1学期/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/09_たしかめよう1学期/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/09_たしかめよう1学期/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/09_たしかめよう1学期/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/09_たしかめよう1学期/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/09_たしかめよう1学期/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/09_たしかめよう1学期/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "10_たし算とひき算のひっ算2",
+      "name": "10_たし算とひき算のひっ算2",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/10_たし算とひき算のひっ算2/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/10_たし算とひき算のひっ算2/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/10_たし算とひき算のひっ算2/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/10_たし算とひき算のひっ算2/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/10_たし算とひき算のひっ算2/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/10_たし算とひき算のひっ算2/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/10_たし算とひき算のひっ算2/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/10_たし算とひき算のひっ算2/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/10_たし算とひき算のひっ算2/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/10_たし算とひき算のひっ算2/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "11_長方形と正方形",
+      "name": "11_長方形と正方形",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/11_長方形と正方形/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/11_長方形と正方形/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/11_長方形と正方形/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/11_長方形と正方形/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/11_長方形と正方形/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/11_長方形と正方形/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/11_長方形と正方形/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/11_長方形と正方形/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/11_長方形と正方形/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/11_長方形と正方形/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "12_かけ算1",
+      "name": "12_かけ算1",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/12_かけ算1/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/12_かけ算1/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/12_かけ算1/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/12_かけ算1/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/12_かけ算1/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/12_かけ算1/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/12_かけ算1/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/12_かけ算1/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/12_かけ算1/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/12_かけ算1/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "13_かけ算2九九",
+      "name": "13_かけ算2九九",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/13_かけ算2九九/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/13_かけ算2九九/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/13_かけ算2九九/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/13_かけ算2九九/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/13_かけ算2九九/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/13_かけ算2九九/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/13_かけ算2九九/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/13_かけ算2九九/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/13_かけ算2九九/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/13_かけ算2九九/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "14_1000までの数",
+      "name": "14_1000までの数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/14_1000までの数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/14_1000までの数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/14_1000までの数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/14_1000までの数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/14_1000までの数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/14_1000までの数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/14_1000までの数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/14_1000までの数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/14_1000までの数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/14_1000までの数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "15_三角形と四角形",
+      "name": "15_三角形と四角形",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/15_三角形と四角形/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/15_三角形と四角形/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/15_三角形と四角形/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/15_三角形と四角形/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/15_三角形と四角形/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/15_三角形と四角形/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/15_三角形と四角形/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/15_三角形と四角形/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/15_三角形と四角形/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/15_三角形と四角形/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "16_たしかめよう2学期",
+      "name": "16_たしかめよう2学期",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/16_たしかめよう2学期/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/16_たしかめよう2学期/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/16_たしかめよう2学期/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/16_たしかめよう2学期/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/16_たしかめよう2学期/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/16_たしかめよう2学期/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/16_たしかめよう2学期/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/16_たしかめよう2学期/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/16_たしかめよう2学期/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/16_たしかめよう2学期/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "17_長い長さ",
+      "name": "17_長い長さ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/17_長い長さ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/17_長い長さ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/17_長い長さ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/17_長い長さ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/17_長い長さ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/17_長い長さ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/17_長い長さ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/17_長い長さ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/17_長い長さ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/17_長い長さ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "18_10000までの数",
+      "name": "18_10000までの数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/18_10000までの数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/18_10000までの数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/18_10000までの数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/18_10000までの数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/18_10000までの数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/18_10000までの数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/18_10000までの数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/18_10000までの数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/18_10000までの数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/18_10000までの数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "19_はこの形",
+      "name": "19_はこの形",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/19_はこの形/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/19_はこの形/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/19_はこの形/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/19_はこの形/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/19_はこの形/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/19_はこの形/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/19_はこの形/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/19_はこの形/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/19_はこの形/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/19_はこの形/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "20_分数",
+      "name": "20_分数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/20_分数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/20_分数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/20_分数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/20_分数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/20_分数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/20_分数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/20_分数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/20_分数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/20_分数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/20_分数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "21_2年生のまとめ",
+      "name": "21_2年生のまとめ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "2年生_拡張版/21_2年生のまとめ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "2年生_拡張版/21_2年生のまとめ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "2年生_拡張版/21_2年生のまとめ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "2年生_拡張版/21_2年生のまとめ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "2年生_拡張版/21_2年生のまとめ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "2年生_拡張版/21_2年生のまとめ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "2年生_拡張版/21_2年生のまとめ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "2年生_拡張版/21_2年生のまとめ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "2年生_拡張版/21_2年生のまとめ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "2年生_拡張版/21_2年生のまとめ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    }
+  ],
+  "3年生_拡張版": [
+    {
+      "id": "01_九九の表とかけ算",
+      "name": "01_九九の表とかけ算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/01_九九の表とかけ算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/01_九九の表とかけ算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/01_九九の表とかけ算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/01_九九の表とかけ算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/01_九九の表とかけ算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/01_九九の表とかけ算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/01_九九の表とかけ算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/01_九九の表とかけ算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/01_九九の表とかけ算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/01_九九の表とかけ算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "02_わり算",
+      "name": "02_わり算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/02_わり算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/02_わり算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/02_わり算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/02_わり算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/02_わり算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/02_わり算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/02_わり算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/02_わり算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/02_わり算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/02_わり算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "3年生_拡張版/02_わり算/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "03_たし算とひき算の筆算",
+      "name": "03_たし算とひき算の筆算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/03_たし算とひき算の筆算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/03_たし算とひき算の筆算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/03_たし算とひき算の筆算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/03_たし算とひき算の筆算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/03_たし算とひき算の筆算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/03_たし算とひき算の筆算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/03_たし算とひき算の筆算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/03_たし算とひき算の筆算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/03_たし算とひき算の筆算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/03_たし算とひき算の筆算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "04_時こくと時間",
+      "name": "04_時こくと時間",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/04_時こくと時間/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/04_時こくと時間/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/04_時こくと時間/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/04_時こくと時間/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/04_時こくと時間/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/04_時こくと時間/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/04_時こくと時間/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/04_時こくと時間/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/04_時こくと時間/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/04_時こくと時間/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "05_一万をこえる数",
+      "name": "05_一万をこえる数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/05_一万をこえる数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/05_一万をこえる数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/05_一万をこえる数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/05_一万をこえる数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/05_一万をこえる数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/05_一万をこえる数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/05_一万をこえる数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/05_一万をこえる数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/05_一万をこえる数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/05_一万をこえる数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "06_表とグラフ",
+      "name": "06_表とグラフ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/06_表とグラフ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/06_表とグラフ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/06_表とグラフ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/06_表とグラフ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/06_表とグラフ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/06_表とグラフ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/06_表とグラフ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/06_表とグラフ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/06_表とグラフ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/06_表とグラフ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "07_たし算とひき算_工夫",
+      "name": "07_たし算とひき算_工夫",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/07_たし算とひき算_工夫/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/07_たし算とひき算_工夫/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/07_たし算とひき算_工夫/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/07_たし算とひき算_工夫/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/07_たし算とひき算_工夫/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/07_たし算とひき算_工夫/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/07_たし算とひき算_工夫/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/07_たし算とひき算_工夫/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/07_たし算とひき算_工夫/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/07_たし算とひき算_工夫/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "08_長さ",
+      "name": "08_長さ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/08_長さ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/08_長さ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/08_長さ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/08_長さ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/08_長さ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/08_長さ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/08_長さ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/08_長さ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/08_長さ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/08_長さ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "09_重さ",
+      "name": "09_重さ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/09_重さ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/09_重さ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/09_重さ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/09_重さ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/09_重さ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/09_重さ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/09_重さ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/09_重さ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/09_重さ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/09_重さ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "10_円と球",
+      "name": "10_円と球",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/10_円と球/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/10_円と球/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/10_円と球/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/10_円と球/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/10_円と球/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/10_円と球/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/10_円と球/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/10_円と球/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/10_円と球/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/10_円と球/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "11_小数",
+      "name": "11_小数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/11_小数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/11_小数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/11_小数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/11_小数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/11_小数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/11_小数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/11_小数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/11_小数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/11_小数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/11_小数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "12_何倍でしょう",
+      "name": "12_何倍でしょう",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/12_何倍でしょう/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/12_何倍でしょう/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/12_何倍でしょう/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/12_何倍でしょう/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/12_何倍でしょう/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/12_何倍でしょう/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/12_何倍でしょう/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/12_何倍でしょう/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/12_何倍でしょう/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/12_何倍でしょう/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "13_分数",
+      "name": "13_分数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/13_分数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/13_分数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/13_分数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/13_分数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/13_分数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/13_分数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/13_分数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/13_分数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/13_分数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/13_分数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "14_□を使った式",
+      "name": "14_□を使った式",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/14_□を使った式/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/14_□を使った式/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/14_□を使った式/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/14_□を使った式/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/14_□を使った式/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/14_□を使った式/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/14_□を使った式/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/14_□を使った式/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/14_□を使った式/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/14_□を使った式/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "15_式と計算",
+      "name": "15_式と計算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/15_式と計算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/15_式と計算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/15_式と計算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/15_式と計算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/15_式と計算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/15_式と計算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/15_式と計算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/15_式と計算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/15_式と計算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/15_式と計算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "16_三角形",
+      "name": "16_三角形",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/16_三角形/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/16_三角形/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/16_三角形/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/16_三角形/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/16_三角形/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/16_三角形/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/16_三角形/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/16_三角形/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/16_三角形/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/16_三角形/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "17_総復習",
+      "name": "17_総復習",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/17_総復習/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/17_総復習/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/17_総復習/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/17_総復習/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/17_総復習/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/17_総復習/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/17_総復習/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/17_総復習/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/17_総復習/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/17_総復習/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "18_かけ算とわり算",
+      "name": "18_かけ算とわり算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "3年生_拡張版/18_かけ算とわり算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "3年生_拡張版/18_かけ算とわり算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "3年生_拡張版/18_かけ算とわり算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "3年生_拡張版/18_かけ算とわり算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "3年生_拡張版/18_かけ算とわり算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "3年生_拡張版/18_かけ算とわり算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "3年生_拡張版/18_かけ算とわり算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "3年生_拡張版/18_かけ算とわり算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "3年生_拡張版/18_かけ算とわり算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "3年生_拡張版/18_かけ算とわり算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    }
+  ],
+  "4年生_拡張版": [
+    {
+      "id": "01_一億をこえる数",
+      "name": "01_一億をこえる数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/01_一億をこえる数/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "02_折れ線グラフ",
+      "name": "02_折れ線グラフ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/02_折れ線グラフ/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "03_わり算の筆算",
+      "name": "03_わり算の筆算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/03_わり算の筆算/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "04_角とその大きさ",
+      "name": "04_角とその大きさ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/04_角とその大きさ/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "05_垂直平行と四角形",
+      "name": "05_垂直平行と四角形",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/05_垂直平行と四角形/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "06_小数",
+      "name": "06_小数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/06_小数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/06_小数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/06_小数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/06_小数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/06_小数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/06_小数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/06_小数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/06_小数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/06_小数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/06_小数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/06_小数/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "07_たしかめよう",
+      "name": "07_たしかめよう",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/07_たしかめよう/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "08_2けたでわるわり算",
+      "name": "08_2けたでわるわり算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/08_2けたでわるわり算/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "09_式と計算",
+      "name": "09_式と計算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/09_式と計算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/09_式と計算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/09_式と計算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/09_式と計算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/09_式と計算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/09_式と計算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/09_式と計算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/09_式と計算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/09_式と計算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/09_式と計算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/09_式と計算/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "10_面積",
+      "name": "10_面積",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/10_面積/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/10_面積/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/10_面積/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/10_面積/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/10_面積/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/10_面積/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/10_面積/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/10_面積/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/10_面積/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/10_面積/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/10_面積/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "11_がい数",
+      "name": "11_がい数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/11_がい数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/11_がい数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/11_がい数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/11_がい数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/11_がい数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/11_がい数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/11_がい数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/11_がい数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/11_がい数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/11_がい数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/11_がい数/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "12_小数のかけ算わり算",
+      "name": "12_小数のかけ算わり算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/12_小数のかけ算わり算/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "13_たしかめよう2学期",
+      "name": "13_たしかめよう2学期",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/13_たしかめよう2学期/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "14_分数",
+      "name": "14_分数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/14_分数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/14_分数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/14_分数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/14_分数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/14_分数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/14_分数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/14_分数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/14_分数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/14_分数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/14_分数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/14_分数/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "15_変わり方",
+      "name": "15_変わり方",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/15_変わり方/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/15_変わり方/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/15_変わり方/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/15_変わり方/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/15_変わり方/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/15_変わり方/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/15_変わり方/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/15_変わり方/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/15_変わり方/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/15_変わり方/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/15_変わり方/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "16_直方体と立方体",
+      "name": "16_直方体と立方体",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "4年生_拡張版/16_直方体と立方体/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    }
+  ],
+  "5年生_拡張版": [
+    {
+      "id": "01_整数と小数",
+      "name": "01_整数と小数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/01_整数と小数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/01_整数と小数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/01_整数と小数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/01_整数と小数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/01_整数と小数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/01_整数と小数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/01_整数と小数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/01_整数と小数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/01_整数と小数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/01_整数と小数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/01_整数と小数/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "02_体積",
+      "name": "02_体積",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/02_体積/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/02_体積/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/02_体積/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/02_体積/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/02_体積/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/02_体積/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/02_体積/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/02_体積/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/02_体積/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/02_体積/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/02_体積/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "03_比例",
+      "name": "03_比例",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/03_比例/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/03_比例/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/03_比例/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/03_比例/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/03_比例/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/03_比例/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/03_比例/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/03_比例/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/03_比例/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/03_比例/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/03_比例/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "04_小数のかけ算",
+      "name": "04_小数のかけ算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/04_小数のかけ算/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "05_小数のわり算",
+      "name": "05_小数のわり算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/05_小数のわり算/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "06_割合1",
+      "name": "06_割合1",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/06_割合1/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/06_割合1/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/06_割合1/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/06_割合1/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/06_割合1/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/06_割合1/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/06_割合1/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/06_割合1/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/06_割合1/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/06_割合1/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/06_割合1/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "07_合同な図形",
+      "name": "07_合同な図形",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/07_合同な図形/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/07_合同な図形/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/07_合同な図形/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/07_合同な図形/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/07_合同な図形/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/07_合同な図形/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/07_合同な図形/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/07_合同な図形/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/07_合同な図形/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/07_合同な図形/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/07_合同な図形/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "08_たしかめよう",
+      "name": "08_たしかめよう",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/08_たしかめよう/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "09_整数",
+      "name": "09_整数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/09_整数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/09_整数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/09_整数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/09_整数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/09_整数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/09_整数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/09_整数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/09_整数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/09_整数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/09_整数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/09_整数/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "10_分数のたし算ひき算",
+      "name": "10_分数のたし算ひき算",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/10_分数のたし算ひき算/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "11_平均",
+      "name": "11_平均",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/11_平均/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/11_平均/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/11_平均/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/11_平均/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/11_平均/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/11_平均/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/11_平均/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/11_平均/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/11_平均/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/11_平均/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/11_平均/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "12_単位量あたりの大きさ",
+      "name": "12_単位量あたりの大きさ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/12_単位量あたりの大きさ/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "13_割合2",
+      "name": "13_割合2",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/13_割合2/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/13_割合2/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/13_割合2/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/13_割合2/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/13_割合2/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/13_割合2/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/13_割合2/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/13_割合2/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/13_割合2/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/13_割合2/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "14_たしかめよう2学期",
+      "name": "14_たしかめよう2学期",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/14_たしかめよう2学期/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "15_正多角形と円",
+      "name": "15_正多角形と円",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/15_正多角形と円/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "16_角柱と円柱",
+      "name": "16_角柱と円柱",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/16_角柱と円柱/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "17_5年のまとめ",
+      "name": "17_5年のまとめ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "5年生_拡張版/17_5年のまとめ/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    }
+  ],
+  "6年生_拡張版": [
+    {
+      "id": "01_対称な図形",
+      "name": "01_対称な図形",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/01_対称な図形/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/01_対称な図形/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/01_対称な図形/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/01_対称な図形/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/01_対称な図形/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/01_対称な図形/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/01_対称な図形/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/01_対称な図形/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/01_対称な図形/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/01_対称な図形/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "02_文字と式",
+      "name": "02_文字と式",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/02_文字と式/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/02_文字と式/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/02_文字と式/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/02_文字と式/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/02_文字と式/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/02_文字と式/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/02_文字と式/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/02_文字と式/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/02_文字と式/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/02_文字と式/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "03_分数かける整数わる整数",
+      "name": "03_分数かける整数わる整数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "単元のポイント",
+          "path": "6年生_拡張版/03_分数かける整数わる整数/PDF/単元のポイント.pdf",
+          "type": "その他"
+        }
+      ]
+    },
+    {
+      "id": "04_分数かける分数",
+      "name": "04_分数かける分数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/04_分数かける分数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/04_分数かける分数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/04_分数かける分数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/04_分数かける分数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/04_分数かける分数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/04_分数かける分数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/04_分数かける分数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/04_分数かける分数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/04_分数かける分数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/04_分数かける分数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "05_分数わる分数",
+      "name": "05_分数わる分数",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/05_分数わる分数/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/05_分数わる分数/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/05_分数わる分数/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/05_分数わる分数/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/05_分数わる分数/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/05_分数わる分数/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/05_分数わる分数/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/05_分数わる分数/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/05_分数わる分数/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/05_分数わる分数/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "06_場合を順序よく整理して",
+      "name": "06_場合を順序よく整理して",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/06_場合を順序よく整理して/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/06_場合を順序よく整理して/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/06_場合を順序よく整理して/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/06_場合を順序よく整理して/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/06_場合を順序よく整理して/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/06_場合を順序よく整理して/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/06_場合を順序よく整理して/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/06_場合を順序よく整理して/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/06_場合を順序よく整理して/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/06_場合を順序よく整理して/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "07_大きい方から何番目",
+      "name": "07_大きい方から何番目",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/07_大きい方から何番目/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/07_大きい方から何番目/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/07_大きい方から何番目/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/07_大きい方から何番目/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/07_大きい方から何番目/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/07_大きい方から何番目/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/07_大きい方から何番目/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/07_大きい方から何番目/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/07_大きい方から何番目/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/07_大きい方から何番目/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "08_たしかめよう_1学期",
+      "name": "08_たしかめよう_1学期",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/08_たしかめよう_1学期/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/08_たしかめよう_1学期/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/08_たしかめよう_1学期/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/08_たしかめよう_1学期/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/08_たしかめよう_1学期/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/08_たしかめよう_1学期/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/08_たしかめよう_1学期/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/08_たしかめよう_1学期/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/08_たしかめよう_1学期/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/08_たしかめよう_1学期/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "09_円の面積",
+      "name": "09_円の面積",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/09_円の面積/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/09_円の面積/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/09_円の面積/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/09_円の面積/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/09_円の面積/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/09_円の面積/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/09_円の面積/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/09_円の面積/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/09_円の面積/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "10_角柱と円柱の体積",
+      "name": "10_角柱と円柱の体積",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/10_角柱と円柱の体積/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/10_角柱と円柱の体積/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/10_角柱と円柱の体積/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/10_角柱と円柱の体積/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/10_角柱と円柱の体積/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/10_角柱と円柱の体積/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/10_角柱と円柱の体積/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/10_角柱と円柱の体積/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/10_角柱と円柱の体積/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/10_角柱と円柱の体積/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "11_比とその利用",
+      "name": "11_比とその利用",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/11_比とその利用/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/11_比とその利用/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/11_比とその利用/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/11_比とその利用/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/11_比とその利用/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/11_比とその利用/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/11_比とその利用/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/11_比とその利用/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/11_比とその利用/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/11_比とその利用/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "12_拡大図と縮図",
+      "name": "12_拡大図と縮図",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/12_拡大図と縮図/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/12_拡大図と縮図/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/12_拡大図と縮図/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/12_拡大図と縮図/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/12_拡大図と縮図/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/12_拡大図と縮図/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/12_拡大図と縮図/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/12_拡大図と縮図/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/12_拡大図と縮図/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/12_拡大図と縮図/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "13_比例と反比例",
+      "name": "13_比例と反比例",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/13_比例と反比例/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/13_比例と反比例/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/13_比例と反比例/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/13_比例と反比例/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/13_比例と反比例/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/13_比例と反比例/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/13_比例と反比例/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/13_比例と反比例/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/13_比例と反比例/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/13_比例と反比例/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "14_たしかめよう_2学期",
+      "name": "14_たしかめよう_2学期",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/14_たしかめよう_2学期/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/14_たしかめよう_2学期/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/14_たしかめよう_2学期/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/14_たしかめよう_2学期/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/14_たしかめよう_2学期/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/14_たしかめよう_2学期/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/14_たしかめよう_2学期/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/14_たしかめよう_2学期/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/14_たしかめよう_2学期/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/14_たしかめよう_2学期/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    },
+    {
+      "id": "15_小学校のまとめ",
+      "name": "15_小学校のまとめ",
+      "pdfs": [
+        {
+          "name": "01_基礎",
+          "path": "6年生_拡張版/15_小学校のまとめ/PDF/01_基礎.pdf",
+          "type": "基礎"
+        },
+        {
+          "name": "01_基礎_解答",
+          "path": "6年生_拡張版/15_小学校のまとめ/PDF/01_基礎_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "02_標準",
+          "path": "6年生_拡張版/15_小学校のまとめ/PDF/02_標準.pdf",
+          "type": "標準"
+        },
+        {
+          "name": "02_標準_解答",
+          "path": "6年生_拡張版/15_小学校のまとめ/PDF/02_標準_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "03_応用",
+          "path": "6年生_拡張版/15_小学校のまとめ/PDF/03_応用.pdf",
+          "type": "応用"
+        },
+        {
+          "name": "03_応用_解答",
+          "path": "6年生_拡張版/15_小学校のまとめ/PDF/03_応用_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "04_思考力",
+          "path": "6年生_拡張版/15_小学校のまとめ/PDF/04_思考力.pdf",
+          "type": "思考力"
+        },
+        {
+          "name": "04_思考力_解答",
+          "path": "6年生_拡張版/15_小学校のまとめ/PDF/04_思考力_解答.pdf",
+          "type": "解答"
+        },
+        {
+          "name": "05_まとめ",
+          "path": "6年生_拡張版/15_小学校のまとめ/PDF/05_まとめ.pdf",
+          "type": "まとめ"
+        },
+        {
+          "name": "05_まとめ_解答",
+          "path": "6年生_拡張版/15_小学校のまとめ/PDF/05_まとめ_解答.pdf",
+          "type": "解答"
+        }
+      ]
+    }
+  ]
+};
+    </script>
+
+    <script>
+        // Data structure
+        const gradeData = {};
+        let comments = JSON.parse(localStorage.getItem('pdfComments') || '{}');
+        let globalNotes = localStorage.getItem('globalFeedbackNotes') || '';
+        let currentPDF = null;
+
+        // Grade configurations
+        const grades = [
+            { id: '2年生_拡張版', name: '2年生', emoji: '🌸' },
+            { id: '3年生_拡張版', name: '3年生', emoji: '🌻' },
+            { id: '4年生_拡張版', name: '4年生', emoji: '🍀' },
+            { id: '5年生_拡張版', name: '5年生', emoji: '🌟' },
+            { id: '6年生_拡張版', name: '6年生', emoji: '🎓' }
+        ];
+
+        // Initialize
+        function init() {
+            scanPDFs();
+            renderSidebar();
+            updateStats();
+            loadGlobalNotes();
+
+            // Auto-save global notes on input
+            document.getElementById('global-notes').addEventListener('input', debounce(autoSaveGlobalNotes, 1000));
+        }
+
+        function scanPDFs() {
+            grades.forEach(grade => {
+                gradeData[grade.id] = {
+                    name: grade.name,
+                    emoji: grade.emoji,
+                    units: []
+                };
+            });
+
+            if (typeof pdfData !== 'undefined' && Object.keys(pdfData).length > 0) {
+                Object.keys(pdfData).forEach(gradeId => {
+                    if (gradeData[gradeId]) {
+                        gradeData[gradeId].units = pdfData[gradeId];
+                    }
+                });
+            }
+        }
+
+        // Toggle global feedback panel
+        function toggleGlobalFeedback() {
+            const panel = document.getElementById('global-feedback');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Load global notes
+        function loadGlobalNotes() {
+            document.getElementById('global-notes').value = globalNotes;
+            updateGlobalSaveStatus(globalNotes ? 'saved' : '');
+        }
+
+        // Auto-save global notes
+        function autoSaveGlobalNotes() {
+            const text = document.getElementById('global-notes').value;
+            globalNotes = text;
+            localStorage.setItem('globalFeedbackNotes', text);
+            updateGlobalSaveStatus('saved');
+        }
+
+        // Save global notes button
+        function saveGlobalNotes() {
+            autoSaveGlobalNotes();
+            showToast('✅ 全体メモを保存しました！');
+        }
+
+        // Update save status display
+        function updateGlobalSaveStatus(status) {
+            const el = document.getElementById('global-save-status');
+            if (status === 'saved') {
+                el.textContent = '✓ 保存済み';
+                el.className = 'save-status saved';
+            } else {
+                el.textContent = '未保存';
+                el.className = 'save-status';
+            }
+        }
+
+        // Debounce helper
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Render sidebar
+        function renderSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.innerHTML = '';
+
+            grades.forEach(grade => {
+                const data = gradeData[grade.id];
+                if (!data || data.units.length === 0) return;
+
+                const section = document.createElement('div');
+                section.className = 'grade-section';
+
+                const commentCount = getGradeCommentCount(grade.id);
+
+                section.innerHTML = `
+                    <div class="grade-header" onclick="toggleGrade('${grade.id}')">
+                        <span>${data.emoji} ${data.name}</span>
+                        ${commentCount > 0 ? `<span class="badge">${commentCount} コメント</span>` : `<span class="badge">${data.units.length} 単元</span>`}
+                    </div>
+                    <div class="unit-list" id="units-${grade.id}">
+                        ${data.units.map(unit => `
+                            <div class="unit-item" onclick="selectUnit('${grade.id}', '${unit.id}')">
+                                <span>${unit.name}</span>
+                                ${getUnitCommentCount(grade.id, unit.id) > 0 ?
+                        `<span class="comment-count">${getUnitCommentCount(grade.id, unit.id)}</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                sidebar.appendChild(section);
+            });
+        }
+
+        function toggleGrade(gradeId) {
+            const unitList = document.getElementById(`units-${gradeId}`);
+            unitList.classList.toggle('show');
+        }
+
+        function selectUnit(gradeId, unitId) {
+            const data = gradeData[gradeId];
+            const unit = data.units.find(u => u.id === unitId);
+            if (!unit) return;
+
+            document.querySelectorAll('.unit-item').forEach(el => el.classList.remove('active'));
+            event.target.closest('.unit-item').classList.add('active');
+
+            renderPDFList(gradeId, unit);
+        }
+
+        function renderPDFList(gradeId, unit) {
+            const container = document.getElementById('pdf-list');
+
+            if (!unit.pdfs || unit.pdfs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <h3>PDFがありません</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = unit.pdfs.map(pdf => {
+                const key = `${gradeId}/${unit.id}/${pdf.name}`;
+                const hasComment = comments[key] && comments[key].text;
+
+                return `
+                    <div class="pdf-card ${hasComment ? 'has-comment' : ''}" 
+                         onclick="selectPDF('${gradeId}', '${unit.id}', '${pdf.name}', '${pdf.path}')">
+                        <div class="pdf-card-header">
+                            <span class="pdf-card-title">${pdf.name}</span>
+                            <span class="pdf-card-badge">${pdf.type}</span>
+                        </div>
+                        <div class="pdf-preview">
+                            <iframe src="${pdf.path}#toolbar=0&navpanes=0" loading="lazy"></iframe>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectPDF(gradeId, unitId, pdfName, pdfPath) {
+            currentPDF = { gradeId, unitId, pdfName, pdfPath };
+            const key = `${gradeId}/${unitId}/${pdfName}`;
+            const comment = comments[key] || { text: '', status: 'pending' };
+
+            document.querySelectorAll('.pdf-card').forEach(el => el.classList.remove('active'));
+            event.target.closest('.pdf-card').classList.add('active');
+
+            const panel = document.getElementById('comment-panel');
+            panel.innerHTML = `
+                <div class="comment-header">
+                    <h3>📄 ${pdfName}</h3>
+                    <p>${gradeId} / ${unitId}</p>
+                </div>
+                <div class="pdf-large-preview">
+                    <iframe src="${pdfPath}"></iframe>
+                </div>
+                <div class="comment-form">
+                    <textarea id="comment-text" placeholder="このPDFへのコメントを入力...">${comment.text}</textarea>
+                    <div class="comment-form-actions">
+                        <button class="btn btn-submit" onclick="saveComment()">📤 コメント送信</button>
+                        <button class="btn btn-primary" onclick="markReviewed()">✅ OK</button>
+                        <button class="btn btn-danger" onclick="clearComment()">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveComment() {
+            if (!currentPDF) return;
+
+            const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
+            const text = document.getElementById('comment-text').value;
+
+            comments[key] = {
+                text: text,
+                status: text ? 'commented' : 'pending',
+                timestamp: new Date().toISOString()
+            };
+
+            localStorage.setItem('pdfComments', JSON.stringify(comments));
+            showToast('📤 コメントを送信しました！');
+            updateStats();
+            renderSidebar();
+
+            document.querySelector('.pdf-card.active')?.classList.toggle('has-comment', text.length > 0);
+        }
+
+        function markReviewed() {
+            if (!currentPDF) return;
+
+            const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
+            comments[key] = {
+                ...comments[key],
+                status: 'reviewed',
+                timestamp: new Date().toISOString()
+            };
+
+            localStorage.setItem('pdfComments', JSON.stringify(comments));
+            showToast('✅ レビュー完了！');
+            updateStats();
+        }
+
+        function clearComment() {
+            if (!currentPDF) return;
+
+            const key = `${currentPDF.gradeId}/${currentPDF.unitId}/${currentPDF.pdfName}`;
+            delete comments[key];
+
+            document.getElementById('comment-text').value = '';
+            localStorage.setItem('pdfComments', JSON.stringify(comments));
+            showToast('🗑️ クリアしました');
+            updateStats();
+            renderSidebar();
+
+            document.querySelector('.pdf-card.active')?.classList.remove('has-comment');
+        }
+
+        // Export feedback
+        function exportFeedback() {
+            let md = `# 算数プリント フィードバック\n\n`;
+            md += `📅 生成日時: ${new Date().toLocaleString('ja-JP')}\n\n`;
+            md += `---\n\n`;
+
+            // Global notes first
+            if (globalNotes.trim()) {
+                md += `## 📋 全体フィードバック\n\n`;
+                md += `${globalNotes}\n\n`;
+                md += `---\n\n`;
+            }
+
+            // Per-PDF comments
+            let hasAnyComments = false;
+
+            grades.forEach(grade => {
+                const data = gradeData[grade.id];
+                if (!data) return;
+
+                let gradeComments = [];
+
+                data.units.forEach(unit => {
+                    unit.pdfs?.forEach(pdf => {
+                        const key = `${grade.id}/${unit.id}/${pdf.name}`;
+                        const comment = comments[key];
+                        if (comment && comment.text) {
+                            gradeComments.push({
+                                unit: unit.name,
+                                pdf: pdf.name,
+                                text: comment.text
+                            });
+                        }
+                    });
+                });
+
+                if (gradeComments.length > 0) {
+                    hasAnyComments = true;
+                    md += `## ${data.emoji} ${data.name}\n\n`;
+
+                    gradeComments.forEach(c => {
+                        md += `### ${c.unit} / ${c.pdf}\n\n`;
+                        md += `${c.text}\n\n`;
+                    });
+                }
+            });
+
+            if (!hasAnyComments && !globalNotes.trim()) {
+                md += `コメントはありません。\n`;
+            }
+
+            // Download with timestamp filename
+            const now = new Date();
+            const timestamp = now.getFullYear().toString() +
+                String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0') + '_' +
+                String(now.getHours()).padStart(2, '0') +
+                String(now.getMinutes()).padStart(2, '0') +
+                String(now.getSeconds()).padStart(2, '0');
+
+            const blob = new Blob([md], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `feedback_${timestamp}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showToast('📤 フィードバックをダウンロードしました！\\nフィードバック/ フォルダに移動してください');
+        }
+
+        // Helper functions
+        function getGradeCommentCount(gradeId) {
+            return Object.keys(comments).filter(k => k.startsWith(gradeId) && comments[k].text).length;
+        }
+
+        function getUnitCommentCount(gradeId, unitId) {
+            return Object.keys(comments).filter(k => k.startsWith(`${gradeId}/${unitId}`) && comments[k].text).length;
+        }
+
+        function updateStats() {
+            const reviewed = Object.values(comments).filter(c => c.status === 'reviewed').length;
+            const commented = Object.values(comments).filter(c => c.text && c.status !== 'reviewed').length;
+
+            document.getElementById('reviewed-count').textContent = reviewed;
+            document.getElementById('commented-count').textContent = commented;
+            document.getElementById('pending-count').textContent = 0;
+
+            let totalPDFs = 0;
+            grades.forEach(grade => {
+                const data = gradeData[grade.id];
+                if (data) {
+                    data.units.forEach(unit => {
+                        totalPDFs += unit.pdfs?.length || 0;
+                    });
+                }
+            });
+            document.getElementById('total-count').textContent = totalPDFs;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
